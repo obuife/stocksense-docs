@@ -52,13 +52,14 @@ CREATE TABLE sync_queue (
 **Example operation payload (sale):**
 ```json
 {
-  "type": "CREATE",
+  "id": "a1b2c3d4-...",
+  "movement_type": "sale",
   "entity": "sale",
   "payload": {
     "id": "a1b2c3d4-...",
     "attendant_id": "u-001",
-    "device_time": 1746000000000,
-    "items": [{ "product_id": "p-001", "qty": 2, "unit_price": "350.00" }],
+    "device_time": "2026-05-01T09:15:00Z",
+    "items": [{ "product_id": "p-001", "quantity": 2, "unit_price": "350.00" }],
     "total_amount": "700.00",
     "payment_method": "cash"
   }
@@ -138,7 +139,7 @@ The sync engine fires when:
   "device_id": "device-uuid",
   "last_sync_at": "2026-05-01T08:00:00Z",
   "operations": [
-    { "id": "queue-uuid-1", "type": "CREATE", "entity": "sale", "payload": { "..." } }
+    { "id": "queue-uuid-1", "movement_type": "sale", "entity": "sale", "payload": { "..." } }
   ]
 }
 
