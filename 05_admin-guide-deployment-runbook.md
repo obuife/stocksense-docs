@@ -155,7 +155,7 @@ Go to **Settings > Notifications** to toggle:
 | Component | Provider | Notes |
 |---|---|---|
 | API Server | Railway / Render / DigitalOcean | Node.js 18 LTS. Minimum 1GB RAM. |
-| Database | PostgreSQL 15 (managed) | Backups every 6 hours, 30-day retention. |
+| Database | MongoDB Atlas (cloud) or MongoDB 6.0 (local) | Backups every 6 hours, 30-day retention. |
 | Cache & Queues | Redis 7 (managed) | Session cache, rate limiting, Bull job queues. |
 | File Storage | AWS S3 or Cloudflare R2 | PDF export files. |
 | CDN / Frontend | Vercel or Netlify | Next.js PWA. Edge caching. |
@@ -171,7 +171,7 @@ Go to **Settings > Notifications** to toggle:
 ### Code & Build
 - [ ] All pull requests merged and approved by Engineering Lead
 - [ ] All CI checks passing (tests, lint, build)
-- [ ] Prisma migration files reviewed and approved
+- [ ] Mongoose schema changes reviewed and approved
 - [ ] No open P0 or P1 bugs
 - [ ] APK size verified: under 30MB
 - [ ] PWA Lighthouse score reviewed
@@ -197,8 +197,8 @@ Confirm all of the following are set in production — **never commit these to s
 
 ### Database
 - [ ] Production database backup taken before migration
-- [ ] All Prisma migrations run successfully on staging
-- [ ] DB indexes created on: `product_id`, `business_id`, `created_at`
+- [ ] Mongoose seed data verified on staging
+- [ ] MongoDB indexes created on: `productId`, `businessId`, `createdAt`
 
 ---
 
@@ -210,14 +210,14 @@ Confirm all of the following are set in production — **never commit these to s
 
 ```bash
 # 1. Create a database backup
-pg_dump -Fc stocksense_production > backup_$(date +%Y%m%d_%H%M).dump
+mongodump --uri="$MONGODB_URI" --out=./backup_$(date +%Y%m%d_%H%M)
 
 # 2. Pull the release branch
 git checkout release/v1.0
 git pull origin release/v1.0
 
-# 3. Run database migrations
-npx prisma migrate deploy
+# 3. Seed initial data (if required)
+npm run seed
 
 # 4. Build the application
 npm run build
@@ -286,8 +286,8 @@ Verify APK size is under 30MB before distributing.
 ```bash
 # 1. Revert via Railway/Render dashboard (Previous Deployment button)
 
-# 2. If a DB migration was run, restore from backup:
-pg_restore -d stocksense_production backup_YYYYMMDD_HHMM.dump
+# 2. If database was seeded or modified, restore from backup:
+mongorestore --uri="$MONGODB_URI" ./backup_YYYYMMDD_HHMM
 
 # 3. Verify health check returns 200
 # 4. Run smoke tests (Section 9)
