@@ -2,7 +2,7 @@
 
 **Audience:** Backend, Frontend, Mobile Developers
 **Applies To:** StockSense v1.0 MVP — All Engineering Tracks
-**Prerequisites:** Git, Node.js 18+, PostgreSQL 15+, Android Studio (mobile track)
+**Prerequisites:** Git, Node.js 18+, MongoDB (Atlas or local), Android Studio (mobile track), Android Studio (mobile track)
 **Owner:** Engineering Lead
 
 ---
@@ -27,7 +27,7 @@ As a developer on this project, your work must honour three non-negotiable produ
 |---|---|---|
 | **Client** | React PWA / Android (Kotlin or Flutter) | UI, offline storage (IndexedDB/SQLite), service worker, sync queue |
 | **API** | Node.js + Express.js | REST API, JWT auth, RBAC middleware, rate limiting, business logic |
-| **Data** | PostgreSQL + Redis + S3 | Persistent storage, caching, job queues, file exports |
+| **Data** | MongoDB (Atlas/local) + Redis + S3 | Persistent storage, caching, job queues, file exports |
 
 ### 2.2 Authentication
 
@@ -49,7 +49,7 @@ As a developer on this project, your work must honour three non-negotiable produ
       /controllers        → Route handler logic
       /services           → Business logic (alerts engine, sync, reports)
       /middleware         → RBAC, JWT verification, rate limiting
-      /models             → Prisma schema + DB access layer
+      /models             → Mongoose schemas + DB access layer
       /jobs               → Bull queue workers (report gen, alert eval)
       /utils              → Helpers (error handlers, validators)
     /tests
@@ -74,7 +74,7 @@ As a developer on this project, your work must honour three non-negotiable produ
 ### 4.1 Prerequisites
 
 - Node.js 18 LTS or higher
-- PostgreSQL 15 or higher
+- MongoDB 6.0 or higher (local) OR a free MongoDB Atlas account
 - Redis 7 or higher
 - Git 2.40+
 - Android Studio (Flamingo or newer) — mobile track only
@@ -100,7 +100,9 @@ cp .env.example .env
 
 Edit `.env` with the following required values:
 ```
-DATABASE_URL=postgresql://user:password@localhost:5432/stocksense
+MONGODB_URI=mongodb://localhost:27017/stocksense
+# OR for MongoDB Atlas:
+# MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/stocksense
 REDIS_URL=redis://localhost:6379
 JWT_PRIVATE_KEY=<RS256 private key>
 JWT_PUBLIC_KEY=<RS256 public key>
@@ -109,10 +111,9 @@ OTP_PROVIDER=termii
 NODE_ENV=development
 ```
 
-**4. Run database migrations and seed data:**
+**4. Seed the database with initial data:**
 ```bash
-npx prisma migrate dev
-npx prisma db seed
+npm run seed
 ```
 
 **5. Start the development server:**
@@ -250,24 +251,24 @@ After 3 failed retries: queue item flagged as **Sync Failed**. User sees: *"X sa
 ## 7. Database Schema Overview
 
 **Conventions:**
-- All primary keys are UUIDs
-- All monetary values: `DECIMAL(12,2)` in Nigerian Naira (NGN)
-- All timestamps: ISO 8601 UTC
-- All tables have: `created_at`, `updated_at`, `deleted_at` (soft delete)
+- All primary keys are MongoDB `ObjectId` (auto-generated `_id` field)
+- All monetary values stored as `Number` in Nigerian Naira (NGN) — use `toFixed(2)` for display
+- All timestamps: ISO 8601 UTC — use Mongoose `Date` type
+- All collections have: `createdAt`, `updatedAt` (via Mongoose `timestamps: true`), `deletedAt` (soft delete)
 
-**Core table relationships:**
-- `businesses` ← root entity. All other tables reference `business_id`
-- `users` → `business_id`
-- `products` → `business_id`, `category_id`, `supplier_id`
-- `stock_movements` → `product_id`, `business_id`, `user_id` — **IMMUTABLE APPEND-ONLY**
-- `sales` → `business_id`, `attendant_id`
-- `sale_items` → `sale_id`, `product_id` — snapshots `product_name` and `unit_price`
-- `suppliers` → `business_id`
-- `purchase_orders` → `business_id`, `supplier_id`, `created_by`
-- `alerts` → `business_id`, `product_id`
-- `reconciliations` + `reconciliation_items` → `business_id`
+**Core collection relationships:**
+- `businesses` ← root collection. All other collections reference `businessId`
+- `users` → `businessId`
+- `products` → `businessId`, `categoryId`, `supplierId`
+- `stockMovements` → `productId`, `businessId`, `userId` — **IMMUTABLE APPEND-ONLY**
+- `sales` → `businessId`, `attendantId`
+- `saleItems` → `saleId`, `productId` — snapshots `productName` and `unitPrice`
+- `suppliers` → `businessId`
+- `purchaseOrders` → `businessId`, `supplierId`, `createdBy`
+- `alerts` → `businessId`, `productId`
+- `reconciliations` + `reconciliationItems` → `businessId`
 
-> 🚫 The `stock_movements` table is the immutable audit log. **No UPDATE or DELETE operations are ever permitted on this table.**
+> 🚫 The `stockMovements` collection is the immutable audit log. **No update or delete operations are ever permitted on this collection.**
 
 ---
 
@@ -278,7 +279,7 @@ After 3 failed retries: queue item flagged as **Sync Failed**. User sees: *"X sa
 - Valid JWT Bearer token on all non-public endpoints
 - RBAC middleware runs before any business logic
 - Input validation on all request parameters
-- Parameterised queries only — no string concatenation in SQL
+- Parameterised queries only — use Mongoose methods, never raw string concatenation in queries
 - Rate limiting: 100 req/min per user; 20 req/min for public endpoints
 
 ### 8.2 Token & Session Rules
@@ -294,7 +295,7 @@ After 3 failed retries: queue item flagged as **Sync Failed**. User sees: *"X sa
 
 | Trigger | Actions |
 |---|---|
-| Every Pull Request | Run tests (`npm test`), lint (`npm run lint`), Prisma schema validation, build check |
+| Every Pull Request | Run tests (`npm test`), lint (`npm run lint`), Mongoose schema validation, build check |
 | Merge to `main` | Deploy to staging, run smoke tests |
 | Release tag (e.g. `v1.0.0`) | Deploy to production, send team notification |
 
