@@ -7,6 +7,31 @@ Versions align with the StockSense product release cycle.
 
 ---
 
+## [1.0.1] — June 2026 — Database Correction
+
+### Changed
+
+- **03 Developer Onboarding Guide** — Updated database technology from PostgreSQL + Prisma to
+  MongoDB (Atlas / local) + Mongoose, reflecting the actual implementation used in development.
+  Updated environment variable from `DATABASE_URL` to `MONGODB_URI`, replaced Prisma migration
+  commands with `npm run seed`, updated DB schema conventions to use MongoDB `ObjectId` and
+  Mongoose `timestamps`, and corrected collection naming to camelCase.
+
+- **05 Admin Guide & Deployment Runbook** — Updated production infrastructure table to MongoDB
+  Atlas. Replaced `pg_dump` backup command with `mongodump` and `pg_restore` rollback command
+  with `mongorestore`. Updated pre-deployment checklist to remove Prisma migration references.
+
+- **06 Offline Architecture & Sync Guide** — Updated local schema mirroring note from
+  PostgreSQL to MongoDB collections.
+
+- **07 Complete API Reference Manual** — Updated monetary value type in the data types appendix
+  from `DECIMAL(12,2)` to MongoDB `Number` serialised as a 2-decimal string in JSON.
+
+- **README.md** — Updated Key Technical Decisions table: database entry changed from
+  PostgreSQL to MongoDB (Atlas / local).
+
+---
+
 ## [1.0.0] — May 2026 — MVP Launch
 
 This is the first full release of StockSense technical documentation,
