@@ -83,7 +83,7 @@ These decisions are referenced throughout the documentation. If any have changed
 | Mobile platform | Android-first (iOS in Phase 2) | Confirmed |
 | Frontend | React + Next.js PWA | Confirmed |
 | Backend | Node.js + Express.js | Confirmed |
-| Database | PostgreSQL (primary) + Redis (cache) | Confirmed |
+| Database | MongoDB (Atlas / local) + Redis (cache) | Confirmed |
 | Local storage — Android | SQLite via Room | Confirmed |
 | Local storage — PWA | IndexedDB via Dexie.js | Confirmed |
 | Authentication | Phone OTP + JWT (RS256) | Confirmed |
