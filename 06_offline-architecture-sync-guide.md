@@ -30,7 +30,7 @@ This is not a rare edge case — it is the **normal operating environment** for 
 | Android (Kotlin / Flutter) | SQLite | Room Persistence Library | Under 50MB |
 | PWA (Chrome / Web) | IndexedDB | Dexie.js | Under 50MB |
 
-> ℹ️ The local schema mirrors the PostgreSQL server schema column-for-column. This ensures offline and online queries use the same logic, and sync mapping stays straightforward.
+> ℹ️ The local schema mirrors the MongoDB server collections field-for-field. This ensures offline and online queries use the same logic, and sync mapping stays straightforward.
 
 ### 2.2 The Sync Queue
 
